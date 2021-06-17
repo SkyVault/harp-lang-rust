@@ -85,7 +85,8 @@ impl HarpVm {
 }
 
 fn main() {
-    reader::reader::read_code("(+ 1 2 3)");
+    let mut lexer = reader::reader::Lexer::new("   \n(+ 1 2 3)");
+    lexer.next_token();
 
     let mut vm = HarpVm::new().load(vec![
         Opcode::Push(Value::Number(1.0)),
