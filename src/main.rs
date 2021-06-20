@@ -5,7 +5,7 @@ enum Operator {
     Add,
     Sub,
     Div,
-    Mul
+    Mul,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -19,7 +19,7 @@ enum Value {
 enum Opcode {
     Push(Value),
     Pop,
-    Call(usize)
+    Call(usize),
 }
 
 #[derive(Debug)]
@@ -36,57 +36,66 @@ fn do_binop(op: Operator, a: Value, b: Value) -> Value {
         (Operator::Sub, Value::Number(left), Value::Number(right)) => Value::Number(left - right),
         (Operator::Mul, Value::Number(left), Value::Number(right)) => Value::Number(left * right),
         (Operator::Div, Value::Number(left), Value::Number(right)) => Value::Number(left / right),
-        _ => panic!("Bad operator application")
+        _ => panic!("Bad operator application"),
     }
 }
 
 impl HarpVm {
     fn new() -> HarpVm {
-        HarpVm { 
-            program: Vec::new(), 
-            stack: Vec::new(), 
-            pc: 0 
+        HarpVm {
+            program: Vec::new(),
+            stack: Vec::new(),
+            pc: 0,
         }
     }
 
     fn load(self, program: Vec<Opcode>) -> HarpVm {
-        HarpVm { program: program, pc: 0, ..self }
+        HarpVm {
+            program: program,
+            pc: 0,
+            ..self
+        }
     }
 
     fn do_opcode(&mut self, opcode: Opcode) {
         match opcode {
-            Opcode::Push(value) => { 
+            Opcode::Push(value) => {
                 self.stack.push(value);
                 self.pc += 1;
-            },
+            }
             Opcode::Call(num_args) => {
                 let mut args: Vec<Value> = Vec::new();
                 for _ in 0..num_args {
                     match self.stack.pop() {
                         Some(value) => args.push(value),
-                        None => panic!("Stack underflow! got {:?} stack {:?}", args, self.stack)
+                        None => panic!("Stack underflow! got {:?} stack {:?}", args, self.stack),
                     }
                 }
 
                 // TODO(Dustin): Do the function call
 
                 self.pc += 1;
-            },
-            _ => panic!("Unhandled opcode: {:?}", opcode)
+            }
+            _ => panic!("Unhandled opcode: {:?}", opcode),
         }
     }
 
     fn eval(&mut self) {
         loop {
-            if self.pc >= self.program.len() { return; }
+            if self.pc >= self.program.len() {
+                return;
+            }
             self.do_opcode(self.program[self.pc]);
         }
     }
 }
 
 fn main() {
-    let mut lexer = reader::reader::Lexer::new("   \n(+ 1 2 3)");
-    lexer.next_token();
+    let mut lexer = reader::reader::Lexer::new("3.14159 -32.1 .41 -.123");
+    println!("{:?}", lexer.next_token());
+    println!("{:?}", lexer.next_token());
+    println!("{:?}", lexer.next_token());
+    println!("{:?}", lexer.next_token());
 
     let mut vm = HarpVm::new().load(vec![
         Opcode::Push(Value::Number(1.0)),
