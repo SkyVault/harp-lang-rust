@@ -17,6 +17,14 @@ pub enum Tok {
   Eof(Loc),
   Number(f32, Loc),
   Bool(bool, Loc),
+  Str(String, Loc),
+  OpenParen(Loc),
+  CloseParen(Loc),
+  OpenBrace(Loc),
+  CloseBrace(Loc),
+  OpenBracket(Loc),
+  CloseBracket(Loc),
+  Quote(Loc),
 }
 
 impl PartialEq for Tok {
@@ -24,7 +32,15 @@ impl PartialEq for Tok {
     match (self, other) {
       (Tok::Eof(_), Tok::Eof(_)) => true,
       (Tok::Number(a, _), Tok::Number(b, _)) => a == b,
+      (Tok::Str(a, _), Tok::Str(b, _)) => a == b,
       (Tok::Bool(a, _), Tok::Bool(b, _)) => a == b,
+      (Tok::OpenParen(_), Tok::OpenParen(_)) => true,
+      (Tok::CloseParen(_), Tok::CloseParen(_)) => true,
+      (Tok::OpenBrace(_), Tok::OpenBrace(_)) => true,
+      (Tok::CloseBrace(_), Tok::CloseBrace(_)) => true,
+      (Tok::OpenBracket(_), Tok::OpenBracket(_)) => true,
+      (Tok::CloseBracket(_), Tok::CloseBracket(_)) => true,
+      (Tok::Quote(_), Tok::Quote(_)) => true,
       _ => false,
     }
   }
@@ -175,9 +191,55 @@ impl Lexer {
       } else if self.current_char_def() == 't' {
         self.move_next();
         return Tok::Bool(true, self.get_loc());
-      } else {
-        self.unpin();
       }
+      self.unpin();
+    }
+
+    // String literals
+    if self.current_char_def() == '\"' {
+      self.move_next();
+      while !self.at_eof() {
+        let chr = self.get_then_move();
+        if chr == '\"' {
+          break;
+        } else {
+          builder.push(chr);
+        }
+      }
+
+      return Tok::Str(builder.clone(), self.get_loc());
+    }
+
+    match self.current_char_def() {
+      '(' => {
+        self.move_next();
+        return Tok::OpenParen(self.get_loc());
+      }
+      ')' => {
+        self.move_next();
+        return Tok::CloseParen(self.get_loc());
+      }
+      '[' => {
+        self.move_next();
+        return Tok::OpenBracket(self.get_loc());
+      }
+      ']' => {
+        self.move_next();
+        return Tok::CloseBracket(self.get_loc());
+      }
+      '{' => {
+        self.move_next();
+        return Tok::OpenBrace(self.get_loc());
+      }
+      '}' => {
+        self.move_next();
+        return Tok::CloseBrace(self.get_loc());
+      }
+      '\'' => {
+        self.move_next();
+        return Tok::Quote(self.get_loc());
+      }
+      _ => {}
     }
 
     if self.at_eof() {

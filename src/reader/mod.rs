@@ -44,3 +44,29 @@ fn reader_comment_test() {
   assert_eq!(Tok::Number(32.0, Loc::blank()), lexer.next_token());
   assert_eq!(Tok::Number(123.0, Loc::blank()), lexer.next_token());
 }
+
+#[test]
+fn reader_single_character_test() {
+  let mut lexer = Lexer::new(" () {} []' ");
+
+  assert_eq!(Tok::OpenParen(Loc::blank()), lexer.next_token());
+  assert_eq!(Tok::CloseParen(Loc::blank()), lexer.next_token());
+
+  assert_eq!(Tok::OpenBrace(Loc::blank()), lexer.next_token());
+  assert_eq!(Tok::CloseBrace(Loc::blank()), lexer.next_token());
+
+  assert_eq!(Tok::OpenBracket(Loc::blank()), lexer.next_token());
+  assert_eq!(Tok::CloseBracket(Loc::blank()), lexer.next_token());
+
+  assert_eq!(Tok::Quote(Loc::blank()), lexer.next_token());
+}
+
+#[test]
+fn reader_string_literal_test() {
+  let mut lexer = Lexer::new(" \"Hello, World\" ");
+
+  assert_eq!(
+    Tok::Str("Hello, World".to_string(), Loc::blank()),
+    lexer.next_token()
+  );
+}
