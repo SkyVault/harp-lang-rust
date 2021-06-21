@@ -91,20 +91,20 @@ impl HarpVm {
 }
 
 fn main() {
-    let mut lexer = reader::reader::Lexer::new("3.14159 -32.1 .41 -.123");
-    println!("{:?}", lexer.next_token());
-    println!("{:?}", lexer.next_token());
-    println!("{:?}", lexer.next_token());
-    println!("{:?}", lexer.next_token());
+    // let mut lexer = Lexer::new("3.14159 -32.1 .41 -.123");
+    // println!("{:?}", lexer.next_token());
+    // println!("{:?}", lexer.next_token());
+    // println!("{:?}", lexer.next_token());
+    // println!("{:?}", lexer.next_token());
 
-    let mut vm = HarpVm::new().load(vec![
-        Opcode::Push(Value::Number(1.0)),
-        Opcode::Push(Value::Number(2.0)),
-        Opcode::Push(Value::Number(3.0)),
-        Opcode::Push(Value::Atom(0)),
-        Opcode::Call(3),
-    ]);
+    // let mut vm = HarpVm::new().load(vec![
+    //     Opcode::Push(Value::Number(1.0)),
+    //     Opcode::Push(Value::Number(2.0)),
+    //     Opcode::Push(Value::Number(3.0)),
+    //     Opcode::Push(Value::Atom(0)),
+    //     Opcode::Call(3),
+    // ]);
 
-    vm.eval();
-    println!("STACK: {:?}", vm.stack);
+    // vm.eval();
+    // println!("STACK: {:?}", vm.stack);
 }

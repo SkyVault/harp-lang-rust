@@ -15,9 +15,10 @@ impl Loc {
 #[derive(Debug)]
 pub enum Tok {
   Eof(Loc),
-  Number(f32, Loc),
+  Number(f64, Loc),
   Bool(bool, Loc),
   Str(String, Loc),
+  Atom(String, Loc), // TODO(Dustin): Create an atom dictionary and only store an atom ID
   OpenParen(Loc),
   CloseParen(Loc),
   OpenBrace(Loc),
@@ -33,6 +34,7 @@ impl PartialEq for Tok {
       (Tok::Eof(_), Tok::Eof(_)) => true,
       (Tok::Number(a, _), Tok::Number(b, _)) => a == b,
       (Tok::Str(a, _), Tok::Str(b, _)) => a == b,
+      (Tok::Atom(a, _), Tok::Atom(b, _)) => a == b,
       (Tok::Bool(a, _), Tok::Bool(b, _)) => a == b,
       (Tok::OpenParen(_), Tok::OpenParen(_)) => true,
       (Tok::CloseParen(_), Tok::CloseParen(_)) => true,
@@ -46,7 +48,7 @@ impl PartialEq for Tok {
   }
 }
 
-pub struct Lexer {
+pub struct Reader {
   it: usize,
   pin: usize,
   pin_loc: Loc,
@@ -54,10 +56,18 @@ pub struct Lexer {
   loc: Loc,
 }
 
-impl Lexer {
-  pub fn new(code: &str) -> Lexer {
+pub fn is_delim(chr: char) -> bool {
+  match chr {
+    '(' | ')' | '[' | ']' | '{' | '}' | '\'' | '\"' | '`' => true,
+    c if c.is_whitespace() => true,
+    _ => false,
+  }
+}
+
+impl Reader {
+  pub fn new(code: &str) -> Reader {
     let loc = Loc { line: 1, column: 1 };
-    Lexer {
+    Reader {
       it: 0,
       pin: 0,
       pin_loc: Loc { ..loc },
@@ -246,6 +256,65 @@ impl Lexer {
       return Tok::Eof(self.get_loc());
     }
 
+    while !self.at_eof() && !is_delim(self.current_char_def()) {
+      builder.push(self.get_then_move());
+    }
+
+    if builder.len() > 0 {
+      return Tok::Atom(builder.clone(), self.get_loc());
+    }
+
     panic!("Unexpected character: '{:?}'", self.current_char_def());
+  }
+
+  pub fn next_expr(&mut self) -> Node {
+    let mut tok = self.next_token();
+
+    let mut quoted = false;
+    match tok {
+      Tok::Quote(_) => {
+        quoted = true;
+        tok = self.next_token();
+      }
+      _ => {}
+    }
+
+    return match tok {
+      Tok::Atom(a, _) => Node::AtomLit(a, NodeInfo::new()),
+      Tok::Number(n, _) => Node::NumberLit(n, NodeInfo::new()),
+      Tok::Str(s, _) => Node::StringLit(s, NodeInfo::new()),
+      Tok::Bool(b, _) => Node::BoolLit(b, NodeInfo::new()),
+
+      Tok::OpenParen(loc) => {
+        let mut ns = Vec::<Node>::new();
+        while !self.at_eof() {
+          let sub_node = self.next_expr();
+          match sub_node {
+            Node::Unit(_) => return Node::List(ns, NodeInfo::new()),
+            _ => ns.push(sub_node),
+          };
+        }
+
+        if self.at_eof() {
+          panic!("Unbalanced braces starting at line: {:?}", loc.line)
+        }
+
+        return Node::List(ns, NodeInfo::new());
+      }
+
+      Tok::CloseParen(_) => return Node::Unit(NodeInfo::new()),
+
+      _ => panic!("What? {:?}", tok),
+    };
+  }
+
+  pub fn next_progn(&mut self) -> Node {
+    let mut ns = Vec::<Node>::new();
+
+    while !self.at_eof() {
+      ns.push(self.next_expr());
+    }
+
+    Node::Progn(ns, NodeInfo::new())
   }
 }

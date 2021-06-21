@@ -1,11 +1,12 @@
 pub mod ast;
 pub mod reader;
 
-use reader::{Lexer, Loc, Tok};
+use ast::{Node, NodeInfo};
+use reader::{Loc, Reader, Tok};
 
 #[test]
 fn reader_skip_whitespace_test() {
-  let mut lexer = Lexer::new("   \n \t \r X");
+  let mut lexer = Reader::new("   \n \t \r X");
   lexer.skip_whitespace();
   let chr = lexer.current_char_or('\0');
   assert_eq!(chr, 'X');
@@ -14,7 +15,7 @@ fn reader_skip_whitespace_test() {
 
 #[test]
 fn reader_number_literal_test() {
-  let mut lexer = Lexer::new("3.14159 -32.1 .41 -.123 #f");
+  let mut lexer = Reader::new("3.14159 -32.1 .41 -.123 #f");
 
   assert_eq!(Tok::Number(3.14159, Loc::blank()), lexer.next_token());
   assert_eq!(Tok::Number(-32.1, Loc::blank()), lexer.next_token());
@@ -25,7 +26,7 @@ fn reader_number_literal_test() {
 
 #[test]
 fn reader_boolean_literal_test() {
-  let mut lexer = Lexer::new(" #f #t");
+  let mut lexer = Reader::new(" #f #t");
 
   assert_eq!(Tok::Bool(false, Loc::blank()), lexer.next_token());
   assert_eq!(Tok::Bool(true, Loc::blank()), lexer.next_token());
@@ -33,7 +34,7 @@ fn reader_boolean_literal_test() {
 
 #[test]
 fn reader_comment_test() {
-  let mut lexer = Lexer::new(
+  let mut lexer = Reader::new(
     "
     ;; This is a comment
     32 ; this is an inline comment 
@@ -47,7 +48,7 @@ fn reader_comment_test() {
 
 #[test]
 fn reader_single_character_test() {
-  let mut lexer = Lexer::new(" () {} []' ");
+  let mut lexer = Reader::new(" () {} []' ");
 
   assert_eq!(Tok::OpenParen(Loc::blank()), lexer.next_token());
   assert_eq!(Tok::CloseParen(Loc::blank()), lexer.next_token());
@@ -63,10 +64,47 @@ fn reader_single_character_test() {
 
 #[test]
 fn reader_string_literal_test() {
-  let mut lexer = Lexer::new(" \"Hello, World\" ");
+  let mut lexer = Reader::new(" \"Hello, World\" ");
 
   assert_eq!(
     Tok::Str("Hello, World".to_string(), Loc::blank()),
     lexer.next_token()
+  );
+}
+
+#[test]
+fn reader_atom_test() {
+  let mut lexer = Reader::new("if +hello+{ 123 b_a$ana");
+  assert_eq!(
+    Tok::Atom("if".to_string(), Loc::blank()),
+    lexer.next_token()
+  );
+  assert_eq!(
+    Tok::Atom("+hello+".to_string(), Loc::blank()),
+    lexer.next_token()
+  );
+  lexer.next_token();
+  lexer.next_token();
+  assert_eq!(
+    Tok::Atom("b_a$ana".to_string(), Loc::blank()),
+    lexer.next_token()
+  );
+}
+
+#[test]
+fn ast_list_test() {
+  let mut lexer = Reader::new("(add 1 2)");
+
+  let xs = lexer.next_expr();
+  assert_eq!(
+    xs,
+    Node::List(
+      vec![
+        Node::AtomLit("add".to_string(), NodeInfo::new()),
+        Node::NumberLit(1.0, NodeInfo::new()),
+        Node::NumberLit(2.0, NodeInfo::new())
+      ],
+      NodeInfo::new()
+    )
   );
 }
