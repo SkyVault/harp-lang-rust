@@ -280,17 +280,19 @@ impl Reader {
     }
 
     return match tok {
-      Tok::Atom(a, _) => Node::AtomLit(a, NodeInfo::new()),
-      Tok::Number(n, _) => Node::NumberLit(n, NodeInfo::new()),
-      Tok::Str(s, _) => Node::StringLit(s, NodeInfo::new()),
-      Tok::Bool(b, _) => Node::BoolLit(b, NodeInfo::new()),
+      Tok::Eof(loc) => Node::Unit(NodeInfo::loc(loc)),
+
+      Tok::Atom(a, loc) => Node::AtomLit(a, NodeInfo::loc(loc)),
+      Tok::Number(n, loc) => Node::NumberLit(n, NodeInfo::loc(loc)),
+      Tok::Str(s, loc) => Node::StringLit(s, NodeInfo::loc(loc)),
+      Tok::Bool(b, loc) => Node::BoolLit(b, NodeInfo::loc(loc)),
 
       Tok::OpenParen(loc) => {
         let mut ns = Vec::<Node>::new();
         while !self.at_eof() {
           let sub_node = self.next_expr();
           match sub_node {
-            Node::Unit(_) => return Node::List(ns, NodeInfo::new()),
+            Node::Unit(_) => return Node::List(ns, NodeInfo::loc(loc)),
             _ => ns.push(sub_node),
           };
         }
@@ -299,10 +301,10 @@ impl Reader {
           panic!("Unbalanced braces starting at line: {:?}", loc.line)
         }
 
-        return Node::List(ns, NodeInfo::new());
+        return Node::List(ns, NodeInfo::loc(loc));
       }
 
-      Tok::CloseParen(_) => return Node::Unit(NodeInfo::new()),
+      Tok::CloseParen(loc) => return Node::Unit(NodeInfo::loc(loc)),
 
       _ => panic!("What? {:?}", tok),
     };

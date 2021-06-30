@@ -16,6 +16,13 @@ impl NodeInfo {
     }
   }
 
+  pub fn loc(loc: Loc) -> NodeInfo {
+    NodeInfo {
+      flags: 0u8,
+      loc: loc,
+    }
+  }
+
   pub fn new_flags(flags: u8) -> NodeInfo {
     NodeInfo {
       flags,
