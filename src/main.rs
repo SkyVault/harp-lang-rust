@@ -1,3 +1,4 @@
+use crate::evaluator::opcodes::Opcode;
 use crate::evaluator::script::make_std_env;
 use crate::evaluator::value::get_value_from_env;
 
@@ -6,12 +7,16 @@ mod reader;
 mod translator;
 
 fn main() {
+    /*
+    TODO:
+
+    if expressions always evaluates both true and false branches
+    this happens because both of those expressions get translated, so function calls get a call opcode
+    we might want to wait until macros are a thing before fully fixing if,
+    for now I can try handling it specially in the evaluator or probably translator
+    */
     let test_code = "
-        (set my-var (+ 1 2 3))
-        (print my-var)
-        (print \"banana\n(+ 1 2 =)\" (+ 1 2))
-        (print \"hello world\" 69 (+ (* 3 3) 2 3))
-        (+ (- 4 2) 6 2)
+        (print (if #t 1 (print \"hello world\")))
     ";
 
     let mut trans = translator::translator::Translator::new();
@@ -21,10 +26,18 @@ fn main() {
     let ast = reader.next_progn();
 
     let script = trans.progn_to_script(ast);
-    println!("SCRIPT: {:?}", script);
+    // println!("SCRIPT: {:?}", script);
 
-    let mut std_env = make_std_env();
-    let results = vm.eval(&mut std_env, script);
+    for (i, op) in script.instructions.iter().enumerate() {
+        print!("({}):\t{}", i, op);
+        match op {
+            Opcode::Const(index) => println!("\t{}", script.constants[*index]),
+            _ => println!(""),
+        }
+    }
 
-    println!("RESULT: {}", results);
+    // let mut std_env = make_std_env();
+    // let results = vm.eval_script(&mut std_env, script);
+
+    // println!("RESULT: {}", results);
 }

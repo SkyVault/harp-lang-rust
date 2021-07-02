@@ -24,7 +24,23 @@ impl Translator {
     };
   }
 
+  pub fn transpile_if_expr(&mut self, expr: &Node, consequent: &Node, alternative: Option<&Node>) {
+    let start = self.script.instructions.len() - 1;
+    self.translate_expr(&consequent);
+  }
+
   pub fn translate_list(&mut self, list: &Vec<Node>) -> () {
+    // Handle special forms, (until macros)
+    match &list[..] {
+      [Node::AtomLit(lexeme, _), expr, consequent] if lexeme == "if" => {
+        self.transpile_if_expr(expr, consequent, None);
+      }
+      [Node::AtomLit(lexeme, _), expr, consequent, alternative] if lexeme == "if" => {
+        self.transpile_if_expr(expr, consequent, Some(alternative));
+      }
+      _ => {}
+    }
+
     for node in list.iter().rev() {
       self.translate_expr(node);
     }
@@ -37,6 +53,7 @@ impl Translator {
       Node::NumberLit(number, _) => self.handle_const(&Value::Number(number.clone())),
       Node::StringLit(lexeme, _) => self.handle_const(&Value::String(lexeme.clone())),
       Node::AtomLit(lexeme, _) => self.handle_const(&Value::Atom(lexeme.clone())),
+      Node::BoolLit(value, _) => self.script.new_inst(Opcode::Push(Value::Bool(*value))),
       Node::List(xs, _) => self.translate_list(xs),
 
       Node::Unit(_) => {}

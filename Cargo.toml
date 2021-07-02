@@ -1,5 +1,5 @@
 [package]
-name = "harp-v2"
+name = "harp-lang"
 version = "0.1.0"
 edition = "2018"
 
