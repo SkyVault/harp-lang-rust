@@ -2,8 +2,8 @@ use super::super::reader::ast::*;
 
 #[derive(Debug, PartialEq)]
 pub struct Loc {
-  line: i32,
-  column: i32,
+  pub line: i32,
+  pub column: i32,
 }
 
 impl Loc {
@@ -129,6 +129,7 @@ impl Reader {
       let chr = self.current_char_def();
       if chr == '\n' {
         self.loc.line += 1;
+        self.loc.column = 0;
       } else {
         self.loc.column += 1;
       }
@@ -314,7 +315,17 @@ impl Reader {
     let mut ns = Vec::<Node>::new();
 
     while !self.at_eof() {
-      ns.push(self.next_expr());
+      let expr = self.next_expr();
+      match expr {
+        Node::Unit(_) => {
+          break;
+        }
+        _ => ns.push(expr),
+      }
+    }
+
+    for n in &ns {
+      println!("node: {}", n);
     }
 
     Node::Progn(ns, NodeInfo::new())

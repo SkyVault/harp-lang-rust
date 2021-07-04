@@ -1,45 +1,45 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'harp-v2'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=harp-v2",
-                    "--package=harp-v2"
-                ],
-                "filter": {
-                    "name": "harp-v2",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'harp-v2'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=harp-v2",
-                    "--package=harp-v2"
-                ],
-                "filter": {
-                    "name": "harp-v2",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        }
-    ]
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug executable 'harp-lang'",
+			"cargo": {
+				"args": [
+					"build",
+					"--bin=harp-lang",
+					"--package=harp-lang"
+				],
+				"filter": {
+					"name": "harp-lang",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in executable 'harp-lang'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--bin=harp-lang",
+					"--package=harp-lang"
+				],
+				"filter": {
+					"name": "harp-lang",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		}
+	]
 }

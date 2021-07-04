@@ -12,7 +12,7 @@ pub enum Value {
   String(String),
   Atom(String),
   Bool(bool),
-  NativeFunc(fn(&mut Vm, Vec<Value>, &mut Value) -> Value),
+  NativeFunc(fn(Vec<Value>, &mut Value) -> Value),
   Env(Vec<HashMap<String, Value>>),
 }
 
@@ -24,9 +24,8 @@ impl fmt::Display for Value {
       Value::String(s) => write!(f, "{}", s),
       Value::Atom(a) => write!(f, "{}", a),
       Value::Bool(b) => write!(f, "{}", if *b { "#t" } else { "#f" }),
-      // Value::NativeFunc(f) => write!(f, "{:?}", f),
       Value::Env(env) => write!(f, "Env"),
-      _ => panic!("Unhandled value"),
+      Value::NativeFunc(_) => write!(f, "NativeFunc"),
     }
   }
 }
@@ -49,7 +48,8 @@ pub fn get_value_from_env(name: &String, env: &mut Value) -> Option<Value> {
     Value::Env(scope_list) => {
       for scope in scope_list.iter().rev() {
         if scope.contains_key(name) {
-          return Some(scope[name].clone());
+          let v = scope[name].clone();
+          return Some(v);
         }
       }
       return None;

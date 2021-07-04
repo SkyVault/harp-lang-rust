@@ -9,7 +9,8 @@ pub enum Opcode {
     Pop,
     Const(usize),
     Call(usize),
-    Label(usize), // Does this really need to be an opcode?
+    Jump(usize),
+    // Label(usize), // Does this really need to be an opcode?
 }
 
 impl fmt::Display for Opcode {
@@ -19,6 +20,7 @@ impl fmt::Display for Opcode {
             Opcode::Pop => write!(f, "Pop"),
             Opcode::Const(index) => write!(f, "Const({})", index),
             Opcode::Call(args) => write!(f, "Call(#args: {})", args),
+            Opcode::Jump(new_pc) => write!(f, "Jump(#addr: {})", new_pc),
         }
     }
 }

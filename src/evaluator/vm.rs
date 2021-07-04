@@ -61,8 +61,8 @@ impl Vm {
             Some(Value::Atom(lexeme)) => match get_value_from_env(&lexeme, env) {
               Some(Value::NativeFunc(callable)) => {
                 let args = self.get_args(*num_args);
-                let result = callable(self, args, env);
-                self.stack.push(result);
+                // let result = callable(self, args, env);
+                // self.stack.push(result);
               }
               None => panic!("Function {:?} does not exist in environment", lexeme),
               _ => panic!("'{:?}' is not a callable value", lexeme),

@@ -25,8 +25,11 @@ impl Translator {
   }
 
   pub fn transpile_if_expr(&mut self, expr: &Node, consequent: &Node, alternative: Option<&Node>) {
-    let start = self.script.instructions.len() - 1;
-    self.translate_expr(&consequent);
+    // let start = self.script.instructions.len() - 1;
+
+    self.translate_expr(expr);
+
+    // self.translate_expr(&consequent);
   }
 
   pub fn translate_list(&mut self, list: &Vec<Node>) -> () {
