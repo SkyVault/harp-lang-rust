@@ -3,7 +3,7 @@
 	retire this module in favor of the vm and translator
 */
 
-use crate::evaluator::value::Value;
+use crate::evaluator::value::{put_value_into_env, Value};
 use crate::get_value_from_env;
 use crate::reader::ast::{to_value, Node};
 
@@ -16,54 +16,35 @@ pub fn qeval_value(value: Value, env: &mut Value) -> Value {
 				panic!("Undefind Variable {}", name)
 			}
 		},
+		Value::List(xs) => {
+			let first = &xs[0];
+			match first {
+				Value::Atom(name) => match get_value_from_env(&name, env) {
+					Some(Value::NativeFunc(callable)) => {
+						let mut args = Vec::<Value>::new();
+						for n in xs.iter().skip(1) {
+							args.push(n.clone());
+						}
+						callable(args, env)
+					}
+					Some(Value::Func(_name, params, progn)) => {
+						for (value, name) in xs.iter().skip(1).zip(params) {
+							put_value_into_env(&name, value, env);
+						}
+						qeval_value(*progn, env)
+					}
+					Some(v) => panic!("Illegal function call. {} is {}", name, v),
+					None => panic!("Undefined function {}", name),
+				},
+				v => panic!("Cannot function call on function {}", v),
+			}
+		}
 		_ => panic!("Cannot evaluate value {}", value),
 	}
 }
 
 pub fn qeval_expr(expr: &Node, env: &mut Value) -> Value {
-	match expr {
-		Node::Unit(_) => Value::Unit,
-		Node::NumberLit(num, _) => Value::Number(*num),
-		Node::StringLit(string, _) => Value::String(string.to_string()),
-
-		Node::AtomLit(name, i) => match get_value_from_env(name, env) {
-			Some(value) => value,
-			None => panic!("{}: Cannot find {} in the environment", i, name),
-		},
-
-		Node::List(xs, i) => {
-			match xs.get(0) {
-				Some(Node::AtomLit(name, i)) => match get_value_from_env(&name, env) {
-					Some(Value::NativeFunc(callable)) => {
-						let mut args = Vec::<Value>::new();
-
-						let mut skip = true;
-						for n in xs.iter() {
-							if skip {
-								skip = false;
-								continue;
-							}
-							args.push(to_value(n));
-						}
-
-						callable(args, env)
-
-						// for node in xs.clone() {
-						// 	args.push(to_value(node));
-						// }
-					}
-					Some(v) => panic!("{} Illegal functio call, {} is {}", i, name, v),
-					None => {
-						panic!("{} Cannot find {} in the environment", i, name)
-					}
-				},
-				Some(v) => panic!("{} Illegal function call {}", i, v),
-				None => Value::Unit,
-			}
-		}
-
-		otherwise => panic!("Cannot evaluate expression: {:?}", otherwise),
-	}
+	return qeval_value(to_value(expr), env);
 }
 
 pub fn qeval_progn(progn: &Node, env: &mut Value) -> Value {

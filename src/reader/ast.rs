@@ -12,7 +12,7 @@ pub struct NodeInfo {
 
 impl Display for NodeInfo {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-    write!(f, "{:#02X}:{:#02X}", self.loc.line, self.loc.column)
+    write!(f, "{:#02X}", self.loc.line)
   }
 }
 
@@ -56,13 +56,13 @@ pub fn to_str(
   indent: String,
 ) -> std::result::Result<(), std::fmt::Error> {
   match node {
-    Node::Unit(i) => write!(f, "{}:    U", i),
-    Node::AtomLit(s, i) => write!(f, "{}{}:    A({})", indent, i, s),
-    Node::StringLit(s, i) => write!(f, "{}{}:    S({})", indent, i, s),
-    Node::NumberLit(n, i) => write!(f, "{}{}:    N({})", indent, i, n),
-    Node::BoolLit(b, i) => write!(f, "{}{}:    B({})", indent, i, b),
+    Node::Unit(i) => write!(f, "{}    U", i),
+    Node::AtomLit(s, i) => write!(f, "{}:{} A: {}", i, indent, s),
+    Node::StringLit(s, i) => write!(f, "{}:{} S: {}", i, indent, s),
+    Node::NumberLit(n, i) => write!(f, "{}:{} N: {}", i, indent, n),
+    Node::BoolLit(b, i) => write!(f, "{}:{} B: {}", i, indent, b),
     Node::Progn(ns, i) => {
-      write!(f, "{}{}:    Progn:\n", indent, i);
+      write!(f, "{}:{} Progn:\n", i, indent);
       for n in ns {
         let mut next_indent = String::from("  ");
         next_indent.push_str(&indent.to_string());
@@ -72,7 +72,7 @@ pub fn to_str(
       write!(f, "")
     }
     Node::List(ns, i) => {
-      write!(f, "{}{}:    List:\n", indent, i);
+      write!(f, "{}:{} List:\n", i, indent);
       for n in ns {
         let mut next_indent = String::from("  ");
         next_indent.push_str(&indent.to_string());
@@ -91,6 +91,7 @@ pub fn to_value(node: &Node) -> Value {
     Node::StringLit(s, _) => Value::String(s.clone()),
     Node::NumberLit(n, _) => Value::Number(n.clone()),
     Node::BoolLit(b, _) => Value::Bool(b.clone()),
+    Node::List(xs, _) => Value::List(xs.iter().map(|n| to_value(n)).collect()),
     v => panic!("Not supported yet '{}'", v),
     // Progn(Vec<Node>, NodeInfo) =>
     // Node::List(xs, _) => {}

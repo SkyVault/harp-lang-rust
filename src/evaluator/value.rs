@@ -12,7 +12,10 @@ pub enum Value {
   String(String),
   Atom(String),
   Bool(bool),
+  List(Vec<Value>),
+  Do(Vec<Value>),
   NativeFunc(fn(Vec<Value>, &mut Value) -> Value),
+  Func(String, Vec<String>, Box<Value>),
   Env(Vec<HashMap<String, Value>>),
 }
 
@@ -24,8 +27,31 @@ impl fmt::Display for Value {
       Value::String(s) => write!(f, "{}", s),
       Value::Atom(a) => write!(f, "{}", a),
       Value::Bool(b) => write!(f, "{}", if *b { "#t" } else { "#f" }),
+      Value::Do(xs) => {
+        write!(f, "Do(");
+        for (i, node) in xs.iter().enumerate() {
+          write!(f, "{}", node);
+          if i < xs.len() - 1 {
+            write!(f, " ");
+          }
+        }
+        write!(f, ")")
+      }
+      Value::List(xs) => {
+        write!(f, "List(");
+        for (i, node) in xs.iter().enumerate() {
+          write!(f, "{}", node);
+          if i < xs.len() - 1 {
+            write!(f, " ");
+          }
+        }
+        write!(f, ")")
+      }
       Value::Env(env) => write!(f, "Env"),
       Value::NativeFunc(_) => write!(f, "NativeFunc"),
+      Value::Func(name, args, _progn) => {
+        write!(f, "fn({} {:?})", name, args)
+      }
     }
   }
 }
@@ -58,15 +84,15 @@ pub fn get_value_from_env(name: &String, env: &mut Value) -> Option<Value> {
   }
 }
 
-pub fn put_value_into_env(name: &String, value: &Value, env: &mut Value) {
+pub fn put_value_into_env(name: &String, value: &Value, env: &mut Value) -> Value {
   match env {
     Value::Env(scopes) => {
       let len = scopes.len() - 1;
       scopes[len].insert(name.to_string(), value.clone());
+      return value.clone();
     }
     _ => {
       panic!("Expected an environment");
     }
   }
-  return ();
 }

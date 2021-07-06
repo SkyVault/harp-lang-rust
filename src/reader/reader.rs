@@ -324,10 +324,6 @@ impl Reader {
       }
     }
 
-    for n in &ns {
-      println!("node: {}", n);
-    }
-
     Node::Progn(ns, NodeInfo::new())
   }
 }

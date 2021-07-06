@@ -4,32 +4,49 @@ use crate::evaluator::script::make_std_env;
 use crate::evaluator::value::*;
 use crate::reader::ast::Node;
 use crate::reader::ast::NodeInfo;
+use std::panic::catch_unwind;
+
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
 
 mod evaluator;
 mod reader;
 mod translator;
 
-fn main() {
-    /*
-    TODO:
-
-    if expressions always evaluates both true and false branches
-    this happens because both of those expressions get translated, so function calls get a call opcode
-    we might want to wait until macros are a thing before fully fixing if,
-    for now I can try handling it specially in the evaluator or probably translator
-    */
-
-    let test_code = "
-        ;; (print (if #t 1 (print \"hello world\")))
-        (print \"here: \" (+ 1 2 3))
-    ";
-
-    let mut reader = reader::reader::Reader::new(test_code);
-    // let mut vm = evaluator::vm::Vm::new();
-
-    let ast = reader.next_progn();
+fn repl() {
+    const HIST: &str = "harp-repl-history";
 
     let mut std_env = make_std_env();
-    let result = qeval_progn(&ast, &mut std_env);
-    println!("RESULT: {}", result);
+    let mut rl = Editor::<()>::new();
+
+    if rl.load_history(HIST).is_err() {}
+
+    loop {
+        match rl.readline("> ") {
+            Ok(line) => {
+                let ast = reader::reader::Reader::new(&line).next_progn();
+                println!("{}", qeval_progn(&ast, &mut std_env));
+            }
+
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C (Exiting)");
+                break;
+            }
+
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D (Exiting)");
+                break;
+            }
+
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break;
+            }
+        }
+    }
+    rl.save_history(HIST).unwrap();
+}
+
+fn main() {
+    repl();
 }
