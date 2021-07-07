@@ -4,15 +4,21 @@ use std::fmt::*;
 
 pub const QUOTED: u8 = 0b00000001;
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub struct NodeInfo {
   pub flags: u8,
   pub loc: Loc,
 }
 
+impl Debug for NodeInfo {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+    write!(f, "{}", self.loc.line)
+  }
+}
+
 impl Display for NodeInfo {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-    write!(f, "{:#02X}", self.loc.line)
+    write!(f, "{}", self.loc.line)
   }
 }
 

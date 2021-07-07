@@ -12,11 +12,18 @@ pub enum Value {
   String(String),
   Atom(String),
   Bool(bool),
+  // value, next
   List(Vec<Value>),
   Do(Vec<Value>),
-  NativeFunc(fn(Vec<Value>, &mut Value) -> Value),
+  NativeFunc(fn(Vec<Value>, &mut EnvHead) -> Value),
   Func(String, Vec<String>, Box<Value>),
   Env(Vec<HashMap<String, Value>>),
+}
+
+impl fmt::Debug for Value {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    return write!(f, "{}", self);
+  }
 }
 
 impl fmt::Display for Value {
@@ -65,6 +72,53 @@ impl PartialEq for Value {
       (Value::Bool(a), Value::Bool(b)) => a == b,
       // (Value::Func(_), Value::Func(_)) => todo!(),
       _ => false,
+    }
+  }
+}
+
+pub struct EnvHead {
+  values: HashMap<String, Value>,
+  next: Option<Box<EnvHead>>,
+}
+
+impl EnvHead {
+  pub fn new() -> EnvHead {
+    EnvHead {
+      values: HashMap::new(),
+      next: None,
+    }
+  }
+
+  pub fn set(&mut self, name: String, value: Value) {
+    self.values.insert(name, value);
+  }
+
+  fn get_rec(&self, name: &String, env: &EnvHead) -> Option<Value> {
+    if env.values.contains_key(name) {
+      return Some(env.values[name].clone());
+    } else {
+      match &env.next {
+        Some(next) => self.get_rec(name, &next),
+        _ => None,
+      }
+    }
+  }
+
+  pub fn get(&self, name: String) -> Option<Value> {
+    self.get_rec(&name, self)
+  }
+
+  pub fn push(self) -> EnvHead {
+    EnvHead {
+      values: HashMap::new(),
+      next: Some(Box::new(self)),
+    }
+  }
+
+  pub fn pop(self) -> Option<EnvHead> {
+    match self.next {
+      Some(lower) => Some(*lower),
+      _ => None,
     }
   }
 }

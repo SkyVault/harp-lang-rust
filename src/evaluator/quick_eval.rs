@@ -3,23 +3,23 @@
 	retire this module in favor of the vm and translator
 */
 
-use crate::evaluator::value::{put_value_into_env, Value};
-use crate::get_value_from_env;
+use crate::evaluator::value::{EnvHead, Value};
 use crate::reader::ast::{to_value, Node};
 
-pub fn qeval_value(value: Value, env: &mut Value) -> Value {
+pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 	match value {
 		Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Unit => value,
-		Value::Atom(name) => match get_value_from_env(&name, env) {
+		Value::Atom(name) => match env.get(name.clone()) {
 			Some(value) => value,
 			None => {
-				panic!("Undefind Variable {}", name)
+				println!("Undefind Variable {}", name);
+				return Value::Unit;
 			}
 		},
 		Value::List(xs) => {
 			let first = &xs[0];
 			match first {
-				Value::Atom(name) => match get_value_from_env(&name, env) {
+				Value::Atom(name) => match env.get(name.to_string()) {
 					Some(Value::NativeFunc(callable)) => {
 						let mut args = Vec::<Value>::new();
 						for n in xs.iter().skip(1) {
@@ -29,7 +29,7 @@ pub fn qeval_value(value: Value, env: &mut Value) -> Value {
 					}
 					Some(Value::Func(_name, params, progn)) => {
 						for (value, name) in xs.iter().skip(1).zip(params) {
-							put_value_into_env(&name, value, env);
+							env.set(name, value.clone());
 						}
 						qeval_value(*progn, env)
 					}
@@ -43,11 +43,11 @@ pub fn qeval_value(value: Value, env: &mut Value) -> Value {
 	}
 }
 
-pub fn qeval_expr(expr: &Node, env: &mut Value) -> Value {
+pub fn qeval_expr(expr: &Node, env: &mut EnvHead) -> Value {
 	return qeval_value(to_value(expr), env);
 }
 
-pub fn qeval_progn(progn: &Node, env: &mut Value) -> Value {
+pub fn qeval_progn(progn: &Node, env: &mut EnvHead) -> Value {
 	return match progn {
 		Node::Progn(ns, _) => ns.iter().map(|e| qeval_expr(e, env)).last().unwrap(),
 		_ => qeval_expr(progn, env),

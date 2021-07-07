@@ -1,14 +1,16 @@
 use crate::evaluator::opcodes::Opcode;
 use crate::evaluator::quick_eval::*;
-use crate::evaluator::script::make_std_env;
 use crate::evaluator::value::*;
 use crate::reader::ast::Node;
 use crate::reader::ast::NodeInfo;
 use std::panic::catch_unwind;
 
+use crate::common::prelude::make_std_env;
+
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
+mod common;
 mod evaluator;
 mod reader;
 mod translator;

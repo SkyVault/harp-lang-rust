@@ -90,21 +90,3 @@ fn reader_atom_test() {
     lexer.next_token()
   );
 }
-
-#[test]
-fn ast_list_test() {
-  let mut lexer = Reader::new("(add 1 2)");
-
-  let xs = lexer.next_expr();
-  assert_eq!(
-    xs,
-    Node::List(
-      vec![
-        Node::AtomLit("add".to_string(), NodeInfo::new()),
-        Node::NumberLit(1.0, NodeInfo::new()),
-        Node::NumberLit(2.0, NodeInfo::new())
-      ],
-      NodeInfo::new()
-    )
-  );
-}
