@@ -16,6 +16,18 @@ pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 				return Value::Unit;
 			}
 		},
+		Value::Do(xs) => {
+			let mut res: Vec<Value> = Vec::new();
+
+			for expr in xs {
+				res.push(qeval_value(expr, env));
+			}
+
+			match res.last() {
+				Some(value) => value.clone(),
+				None => Value::Unit,
+			}
+		}
 		Value::List(xs) => {
 			let first = &xs[0];
 			match first {
@@ -28,10 +40,11 @@ pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 						callable(args, env)
 					}
 					Some(Value::Func(_name, params, progn)) => {
+						let mut scope = env.clone().push();
 						for (value, name) in xs.iter().skip(1).zip(params) {
-							env.set(name, value.clone());
+							scope.set(name, value.clone());
 						}
-						qeval_value(*progn, env)
+						qeval_value(*progn, &mut scope)
 					}
 					Some(v) => panic!("Illegal function call. {} is {}", name, v),
 					None => panic!("Undefined function {}", name),

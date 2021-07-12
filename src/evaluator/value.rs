@@ -1,6 +1,7 @@
 use crate::evaluator::opcodes::Opcode;
 use crate::evaluator::vm::Vm;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use std::fmt;
 use std::fmt::*;
@@ -79,6 +80,15 @@ impl PartialEq for Value {
 pub struct EnvHead {
   values: HashMap<String, Value>,
   next: Option<Box<EnvHead>>,
+}
+
+impl Clone for EnvHead {
+  fn clone(&self) -> Self {
+    Self {
+      values: self.values.clone(),
+      next: self.next.clone(),
+    }
+  }
 }
 
 impl EnvHead {
