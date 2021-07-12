@@ -99,6 +99,7 @@ pub fn make_std_env() -> EnvHead {
   env.set("if".to_string(), Value::NativeFunc(std_if));
 
   // Loops
+  // env.set("set!".to_string(), Value::NativeFunc(std_set));
 
   // Functional
 

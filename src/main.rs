@@ -1,9 +1,8 @@
-use crate::evaluator::opcodes::Opcode;
+use std::env;
+use std::fs;
+
 use crate::evaluator::quick_eval::*;
 use crate::evaluator::value::*;
-use crate::reader::ast::Node;
-use crate::reader::ast::NodeInfo;
-use std::panic::catch_unwind;
 
 use crate::common::prelude::make_std_env;
 
@@ -49,6 +48,29 @@ fn repl() {
     rl.save_history(HIST).unwrap();
 }
 
+fn run_script(path: &String) {
+    match fs::read_to_string(path) {
+        Ok(s) => {
+            let mut std_env = make_std_env();
+            let progn = reader::reader::Reader::new(&s).next_progn();
+            qeval_progn(&progn, &mut std_env);
+        }
+        Err(err) => panic!("{}", err),
+    }
+    // let mut std_env = make_std_env();
+    // qeval_progn(progn: &Node, env: &mut EnvHead)
+}
+
+fn help() {
+    println!("Harp Help")
+}
+
 fn main() {
-    repl();
+    let args: Vec<String> = env::args().collect();
+
+    match args.len() {
+        1 => repl(),
+        2 => run_script(&args[1]),
+        _ => help(),
+    }
 }
