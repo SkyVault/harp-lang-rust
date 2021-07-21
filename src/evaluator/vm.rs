@@ -1,7 +1,6 @@
 use crate::evaluator::opcodes::Opcode;
 use crate::evaluator::script::Script;
 use crate::evaluator::value::Value;
-use crate::get_value_from_env;
 
 pub struct Vm {
   pub stack: Vec<Value>,
@@ -32,10 +31,10 @@ impl Vm {
       Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Unit | Value::NativeFunc(_) => {
         value
       }
-      Value::Atom(name) => match get_value_from_env(&name, env) {
-        Some(value) => value,
-        None => Value::Unit,
-      },
+      // Value::Atom(name) => match get_value_from_env(&name, env) {
+      //   Some(value) => value,
+      //   None => Value::Unit,
+      // },
       _ => panic!("Unhandled value"),
     }
   }
@@ -58,15 +57,15 @@ impl Vm {
         Opcode::Call(num_args) => {
           let atom = self.stack.pop();
           match atom {
-            Some(Value::Atom(lexeme)) => match get_value_from_env(&lexeme, env) {
-              Some(Value::NativeFunc(callable)) => {
-                let args = self.get_args(*num_args);
-                // let result = callable(self, args, env);
-                // self.stack.push(result);
-              }
-              None => panic!("Function {:?} does not exist in environment", lexeme),
-              _ => panic!("'{:?}' is not a callable value", lexeme),
-            },
+            // Some(Value::Atom(lexeme)) => match get_value_from_env(&lexeme, env) {
+            //   Some(Value::NativeFunc(callable)) => {
+            //     let args = self.get_args(*num_args);
+            //     // let result = callable(self, args, env);
+            //     // self.stack.push(result);
+            //   }
+            //   None => panic!("Function {:?} does not exist in environment", lexeme),
+            //   _ => panic!("'{:?}' is not a callable value", lexeme),
+            // },
             _ => panic!("Failed to call function"),
           }
           self.pc += 1;

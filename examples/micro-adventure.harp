@@ -1,0 +1,4 @@
+(defun start-game ()
+  (print "Welcome to the game!"))
+
+(start-game)

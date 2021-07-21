@@ -1,10 +1,5 @@
-use crate::evaluator::opcodes::Opcode;
-use crate::evaluator::vm::Vm;
 use std::collections::HashMap;
-use std::rc::Rc;
-
 use std::fmt;
-use std::fmt::*;
 
 #[derive(Clone)]
 pub enum Value {
@@ -18,7 +13,6 @@ pub enum Value {
   Do(Vec<Value>),
   NativeFunc(fn(Vec<Value>, &mut EnvHead) -> Value),
   Func(String, Vec<String>, Box<Value>),
-  Env(Vec<HashMap<String, Value>>),
 }
 
 impl fmt::Debug for Value {
@@ -55,7 +49,6 @@ impl fmt::Display for Value {
         }
         write!(f, ")")
       }
-      Value::Env(env) => write!(f, "Env"),
       Value::NativeFunc(_) => write!(f, "NativeFunc"),
       Value::Func(name, args, _progn) => {
         write!(f, "fn({} {:?})", name, args)
@@ -129,34 +122,6 @@ impl EnvHead {
     match self.next {
       Some(lower) => Some(*lower),
       _ => None,
-    }
-  }
-}
-
-pub fn get_value_from_env(name: &String, env: &mut Value) -> Option<Value> {
-  match env {
-    Value::Env(scope_list) => {
-      for scope in scope_list.iter().rev() {
-        if scope.contains_key(name) {
-          let v = scope[name].clone();
-          return Some(v);
-        }
-      }
-      return None;
-    }
-    _ => panic!("Expected environment got {}", env),
-  }
-}
-
-pub fn put_value_into_env(name: &String, value: &Value, env: &mut Value) -> Value {
-  match env {
-    Value::Env(scopes) => {
-      let len = scopes.len() - 1;
-      scopes[len].insert(name.to_string(), value.clone());
-      return value.clone();
-    }
-    _ => {
-      panic!("Expected an environment");
     }
   }
 }

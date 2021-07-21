@@ -8,7 +8,12 @@ use crate::reader::ast::{to_value, Node};
 
 pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 	match value {
-		Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Unit => value,
+		Value::Number(_)
+		| Value::String(_)
+		| Value::Bool(_)
+		| Value::NativeFunc(_)
+		| Value::Func(_, _, _)
+		| Value::Unit => value,
 		Value::Atom(name) => match env.get(name.clone()) {
 			Some(value) => value,
 			None => {
@@ -30,7 +35,21 @@ pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 		}
 		Value::List(xs) => {
 			let first = &xs[0];
-			match first {
+			match qeval_value(first.clone(), env) {
+				Value::Func(_, params, progn) => {
+					let mut scope = env.clone().push();
+					for (value, name) in xs.iter().skip(1).zip(params) {
+						scope.set(name, qeval_value(value.clone(), env));
+					}
+					qeval_value(*progn, &mut scope)
+				}
+				Value::NativeFunc(callable) => {
+					let mut args = Vec::<Value>::new();
+					for n in xs.iter().skip(1) {
+						args.push(n.clone());
+					}
+					callable(args, env)
+				}
 				Value::Atom(name) => match env.get(name.to_string()) {
 					Some(Value::NativeFunc(callable)) => {
 						let mut args = Vec::<Value>::new();
@@ -42,7 +61,7 @@ pub fn qeval_value(value: Value, env: &mut EnvHead) -> Value {
 					Some(Value::Func(_name, params, progn)) => {
 						let mut scope = env.clone().push();
 						for (value, name) in xs.iter().skip(1).zip(params) {
-							scope.set(name, value.clone());
+							scope.set(name, qeval_value(value.clone(), env));
 						}
 						qeval_value(*progn, &mut scope)
 					}

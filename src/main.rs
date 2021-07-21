@@ -53,6 +53,7 @@ fn run_script(path: &String) {
         Ok(s) => {
             let mut std_env = make_std_env();
             let progn = reader::reader::Reader::new(&s).next_progn();
+            println!("AST: {}", progn);
             qeval_progn(&progn, &mut std_env);
         }
         Err(err) => panic!("{}", err),
