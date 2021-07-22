@@ -1,3 +1,5 @@
+(def player-room-id :none)
+
 (defun start-game ()
   (print "Welcome to the game!"))
 
